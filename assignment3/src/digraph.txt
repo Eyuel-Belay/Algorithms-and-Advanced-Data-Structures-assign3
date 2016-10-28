@@ -1,0 +1,6 @@
+digraph {
+   n1 → n2 [label="n1ton2",weight="2"];
+   n2 → n3 [label="n2ton3"];
+   n3 → n1 [label="n3ton1"];
+
+}
