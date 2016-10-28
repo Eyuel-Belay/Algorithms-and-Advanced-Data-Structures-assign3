@@ -10,7 +10,7 @@ public class Node {
     private int nodeValue;
     private List<Edge> edgesList;
     private List<Node> childrenNodes;
-    private boolean isVisited;
+    private int distance;
 
     /**
      * Each node is an object of the vertex and contains a list of the edges
@@ -47,13 +47,6 @@ public class Node {
         return edgesList.stream().filter(edge -> edge.isBetween(this, node)).findFirst();
     }
 
-    public boolean isSource() {
-        return edgesList.size() > 0;
-    }
-
-    public boolean isSink() {
-        return edgesList.size() == 0;
-    }
     //Getters and setters
     public int getNodeValue() {
         return nodeValue;
@@ -67,16 +60,23 @@ public class Node {
         return edgesList;
     }
 
+    public Edge getEdge(Node targetNode) {
+        Optional optional = findEdge(targetNode);
+        if (optional.isPresent())
+            return (Edge) optional.get();
+        return null;
+    }
+
     public void setEdgesList(List<Edge> edgesList) {
         this.edgesList = edgesList;
     }
 
-    public boolean isVisited() {
-        return isVisited;
+    public int getDistance() {
+        return distance;
     }
 
-    public void setVisited(boolean visited) {
-        isVisited = visited;
+    public void setDistance(int distance) {
+        this.distance = distance;
     }
 
     public List<Node> getChildrenNodes() {

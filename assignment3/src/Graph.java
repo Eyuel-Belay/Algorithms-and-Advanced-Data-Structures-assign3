@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.sql.Array;
 import java.util.*;
 
 /**
@@ -9,9 +10,14 @@ import java.util.*;
  */
 public class Graph implements A3Graph {
 
-    private List<Node> adjacencyList = new ArrayList<>();
+    private ArrayList<Node> adjacencyList = new ArrayList<>();
+    private ArrayDeque<Node> stack;
 
-    public List readDotFile(String fileName) {
+    /**
+     * A method to parse a DOT file into a graph of nodes which is held in a List
+     * @param fileName: the name of the DOT file
+     */
+    public void readDotFile(String fileName) {
         List fileData = new ArrayList();
         try {
             String currentLine;
@@ -48,7 +54,6 @@ public class Graph implements A3Graph {
                         weight = Integer.parseInt(currentLine.substring(index, currentLine.lastIndexOf("\"")));
                     } else weight = 1;       //Default value of the weight
                     addEdge(node1, weight, node2);
-                    System.out.println("node 1: " + node1 + ", node 2: " + node2 + ", weight: " + weight);
                 }
             }
         } catch (URISyntaxException e) {
@@ -56,7 +61,6 @@ public class Graph implements A3Graph {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return fileData;
     }
 
     @Override
@@ -74,14 +78,14 @@ public class Graph implements A3Graph {
                 e.printStackTrace();
             }
         }
-        Node node1 = findNode(new Node(srcNodeItem)).get();
-        Node node2 = findNode(new Node(tgtNodeItem)).get();
+        Node node1 = findNode(new Node(srcNodeItem), adjacencyList).get();
+        Node node2 = findNode(new Node(tgtNodeItem), adjacencyList).get();
         node1.addEdge(node2, weight);
     }
 
     @Override
     public boolean hasNode(int nodeItem) {
-        return findNode(new Node(nodeItem)).isPresent();
+        return findNode(new Node(nodeItem), adjacencyList).isPresent();
     }
 
     @Override
@@ -94,7 +98,7 @@ public class Graph implements A3Graph {
     @Override
     public void printAllNodes() {
         for (Node n : adjacencyList)
-            System.out.println(n.getNodeValue());
+            System.out.println("Node " + n.getNodeValue());
     }
 
     @Override
@@ -116,7 +120,7 @@ public class Graph implements A3Graph {
 
     @Override
     public boolean isAcyclic() {
-        Deque<Node> stack = new ArrayDeque<>();  //stack of the sorted nodes
+        stack = new ArrayDeque<>();  //stack of the sorted nodes
         Set<Node> visited = new HashSet<>();    //queue of the visited nodes
         ArrayList<Node> expanded = new ArrayList<>();   //a List of the completely explored nodes where all of its children are visited
         for (Node node : adjacencyList) {
@@ -152,8 +156,32 @@ public class Graph implements A3Graph {
     }
 
     @Override
-    public Map<Integer, Integer> shortestPath(int nodeItem) {
-        return null;
+    public Map<Integer, Integer> shortestPath(int srcNode) {
+        Map<Integer, Integer> shortestPaths = new HashMap<>();
+
+        if (isAcyclic()) {
+            ArrayList<Node> sortedNodes = new ArrayList(Arrays.asList(stack.toArray()));    //Converting the stack to ArrayList
+            Node sourceNode = findNode(new Node(srcNode), sortedNodes).get();
+            sourceNode.setDistance(0);        //Distance to the source is 0
+
+            //Setting distance to all other nodes is infinity
+            for (Node node : sortedNodes) {
+                if (!node.equals(sourceNode))
+                    node.setDistance(9999);
+            }
+
+            //Visiting every node u and checking each of its child v
+            for (Node node : sortedNodes) {
+                for (Node n : node.getChildrenNodes()) {
+                    //If the distance is infinite then assign it to the distance of the source node + the weight from the u node
+                    if (n.getDistance() > node.getDistance() + node.getEdge(n).getWeight()) {
+                        n.setDistance(node.getDistance() + node.getEdge(n).getWeight());
+                        shortestPaths.put(n.getNodeValue(), n.getDistance());          //adding to the final node to the map with its distance from the source
+                    }
+                }
+            }
+        }
+        return shortestPaths;
     }
 
     /**
@@ -161,9 +189,9 @@ public class Graph implements A3Graph {
      * @param node: the node to be checked
      * @return an container of the similar nodes or null if non exists
      */
-    private Optional<Node> findNode(Node node) {
+    private Optional<Node> findNode(Node node, ArrayList<Node> list) {
         //Checks for each node value with the node's value to be added
-        return adjacencyList.stream().filter(node1 -> node1.getNodeValue() == node.getNodeValue()).findFirst();
+        return list.stream().filter(node1 -> node1.getNodeValue() == node.getNodeValue()).findFirst();
     }
 
 

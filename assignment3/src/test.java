@@ -7,8 +7,8 @@ public class test {
         Graph graph = new Graph();
 
         graph.readDotFile("/digraph.txt");
-        graph.printAllNodes();
         graph.printAllEdges();
         System.out.println(graph.isAcyclic());
+        System.out.println(graph.shortestPath(2));
     }
 }
